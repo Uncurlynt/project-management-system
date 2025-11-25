@@ -1,0 +1,33 @@
+services:
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      target: builder
+    container_name: backend-dev
+    volumes:
+      - ./server:/app
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+    command: go run ./cmd/service
+
+  frontend:
+    image: node:18-alpine
+    container_name: frontend-dev
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    command: sh -c "corepack enable && corepack prepare pnpm@latest --activate && pnpm install && pnpm run dev"
+    networks:
+      - app-network
+    depends_on:
+      - backend
+
+networks:
+  app-network:
+    driver: bridge
